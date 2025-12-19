@@ -4,6 +4,7 @@ import numpy as np
 import os
 
 class Data():
+    
     def __init__(self, path): 
         # C'est le path du CSV
         self.path = path
@@ -92,15 +93,15 @@ class Data():
         de l’usage de l’IA et de la consommation de café sur la performance.
         """
 
-        df = self.df  # alias plus court
+        df = self.df  
 
         # Dossier de sortie pour enregistrer toutes les figures
         fig_dir = "figures"
+        # Crée le dossier s'il n'existe pas
         os.makedirs(fig_dir, exist_ok=True)
 
-        # ============================================================
         # ==== G1 – High_Stress → Stress & Succès (V1 + V3) ==========
-        # ============================================================
+        
         print("\n==== G1 – Group by High_Stress → Stress & Success ====\n")
 
         # Colonne High_Stress (True si stress > 70)
@@ -114,6 +115,7 @@ class Data():
             "AI_Usage_Hours"
         ]].mean().round(2)
 
+        
         print("Mean stats by High_Stress (False = low/medium, True = high) :")
         print(g1_stats)
 
@@ -171,9 +173,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G1_success_by_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+        
         # ==== G2 – Sleep_Group → Sommeil, Stress & Succès (V2,V4,V5)
-        # ============================================================
+        
         print("\n==== G2 – Group by Sleep_Group → Sleep, Stress & Success ====\n")
 
         # Colonne Sleep_Group : <5h, 5–7h, >7h
@@ -266,9 +268,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G2_success_by_sleep.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+        
         # ==== G3 – Coding_Hours_Group → Heures de code, Stress, Succès
-        # ============================================================
+        
         print("\n==== G3 – Group by Coding_Hours_Group → Coding, Stress & Success ====\n")
 
         def coding_group(hours):
@@ -345,9 +347,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G3_success_by_coding.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+        
         # ==== G4 – High_AI_Usage → IA, Erreurs & Succès (V6 + V7) ====
-        # ============================================================
+        
         print("\n==== G4 – Group by High_AI_Usage → AI, Errors & Success ====\n")
 
         median_ai = df["AI_Usage_Hours"].median()
@@ -418,9 +420,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G4_success_by_ai.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+        
         # ==== G5 – High_Coffee → Café, Stress & Succès (bonus) ======
-        # ============================================================
+        
         print("\n==== G5 – Group by High_Coffee → Coffee, Stress & Success ====\n")
 
         med = df["Coffee_Intake"].median()
@@ -546,9 +548,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G6_success_sleep_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+       
         # ==== G7 – High_AI_Usage × High_Stress → IA + Stress =========
-        # ============================================================
+        
         print("\n==== G7 – High_AI_Usage × High_Stress → AI + Stress ====\n")
 
         ai_threshold = df["AI_Usage_Hours"].mean()
@@ -604,9 +606,9 @@ class Data():
         plt.savefig(os.path.join(fig_dir, "G7_errors_ai_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
+        
         # ==== G8 – Coding_Hours_Group × High_Success → Profil final ==
-        # ============================================================
+       
         print("\n==== G8 – Coding_Hours_Group × High_Success → Coding + Success Profiles ====\n")
 
         success_median = df["Task_Success_Rate"].median()
@@ -655,6 +657,7 @@ class Data():
 
 
     def filtering(self):
+
         """
         Applique tous les filtres F1 à F7 sur le DataFrame self.df.
 
@@ -672,9 +675,9 @@ class Data():
         df = self.df  # alias plus court
         filters = {}
 
-        # ==============================
+        
         # F1 – High Success / Low Success
-        # ==============================
+        
         print("\n[F1] High Success / Low Success (Task_Success_Rate)")
 
         # High Success : Task_Success_Rate > 80
@@ -689,9 +692,9 @@ class Data():
         filters["high_success"] = high_success
         filters["low_success"] = low_success
 
-        # ==============================
+       
         # F2 – High Stress / Low Stress
-        # ==============================
+        
         print("\n[F2] High Stress / Low Stress (Stress_Level)")
 
         # High Stress : Stress_Level > 70
@@ -706,9 +709,9 @@ class Data():
         filters["high_stress"] = high_stress
         filters["low_stress"] = low_stress
 
-        # ==============================
+        
         # F3 – Low Sleep / High Sleep
-        # ==============================
+        
         print("\n[F3] Low Sleep / High Sleep (Sleep_Hours)")
 
         # Low Sleep : Sleep_Hours < 6
@@ -723,9 +726,9 @@ class Data():
         filters["low_sleep"] = low_sleep
         filters["high_sleep"] = high_sleep
 
-        # ==============================
+       
         # F4 – Heavy Coders / Light Coders
-        # ==============================
+       
         print("\n[F4] Heavy Coders / Light Coders (Hours_Coding)")
 
         # Heavy Coders : Hours_Coding > 8
@@ -740,9 +743,9 @@ class Data():
         filters["heavy_coders"] = heavy_coders
         filters["light_coders"] = light_coders
 
-        # ==============================
+       
         # F5 – High AI Usage / Low AI Usage
-        # ==============================
+        
         print("\n[F5] High AI Usage / Low AI Usage (AI_Usage_Hours)")
 
         # Seuil = médiane du temps d'utilisation de l'IA
@@ -758,9 +761,9 @@ class Data():
         filters["high_ai_usage"] = high_ai_usage
         filters["low_ai_usage"] = low_ai_usage
 
-        # ==============================
+        
         # F6 – High Errors / Low Errors
-        # ==============================
+        
         print("\n[F6] High Errors / Low Errors (Errors)")
 
         # Seuil choisi : médiane du nombre d'erreurs
@@ -776,9 +779,9 @@ class Data():
         filters["high_errors"] = high_errors
         filters["low_errors"] = low_errors
 
-        # ==============================
+        
         # F7 – High Coffee / Low Coffee
-        # ==============================
+        
         print("\n[F7] High Coffee / Low Coffee (Coffee_Intake)")
 
         # Seuil = médiane de la consommation de café
@@ -794,9 +797,9 @@ class Data():
         filters["high_coffee"] = high_coffee
         filters["low_coffee"] = low_coffee
 
-        # ==============================
+        
         # Retour de tous les filtres
-        # ==============================
+        
         return filters
 
     def matrix_correlation(self,afficher:bool):
@@ -887,4 +890,9 @@ class Data():
 data=Data('AI_Developer_Performance_Extended_1000.csv')
 print(data)
 
+data.inspect_data()
+data.summarize_data()
+data.clean_data()
 data.grouping_visualization()
+# filters=data.filtering()
+# corr_matrix=data.matrix_correlation(True)
