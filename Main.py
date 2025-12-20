@@ -12,32 +12,35 @@ class Data():
         self.df = pd.read_csv(self.path)
 
     def inspect_data(self):
+        df=self.df
         # Afficher les 10 premières lignes
         print("First 10 rows:")
-        print(self.df.head(10))
+        print(df.head(10))
 
         # Afficher les 10 dernières lignes
         print("\nLast 10 rows:")
-        print(self.df.tail(10))
+        print(df.tail(10))
 
         # Infos générales : nombre de lignes, colonnes, types, NaN approximatifs
         print("\nInfo about the dataset:")
-        print(self.df.info())
+        print(df.info())
 
         # Liste des colonnes + types
         print("\nColumn names and data types:")
-        print(self.df.dtypes)
+        print(df.dtypes)
 
         # Nombre de valeurs manquantes par colonne
         print("\nMissing values per column:")
-        print(self.df.isna().sum())
+        print(df.isna().sum())
 
     def summarize_data(self):
+        df=self.df
         # Statistiques descriptives de toutes les colonnes numériques
         print("Basic statistics for numerical columns:")
-        print(self.df.describe())   # count, mean, std, min, 25%, 50%, 75%, max
+        print(df.describe())   # count, mean, std, min, 25%, 50%, 75%, max
 
     def clean_data(self):
+        df=self.df
 
         # 1. Définir les colonnes numériques 
         numeric_cols = [
@@ -48,50 +51,50 @@ class Data():
             'Errors'
         ]
 
-        cols = self.df.columns
+        cols = df.columns
 
         # 2. Gérer les valeurs non numériques (remplacement par NaN)
         for col in numeric_cols:
             # S'assurer que la colonne existe
             if col in cols:
                 # Si la valeur n'est pas numérique on la remplace par NaN
-                self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
+                df[col] = pd.to_numeric(df[col], errors="coerce")
 
         # 3. Gerer les valeurs négatives (remplacement par NaN)
         for col in numeric_cols:
             # S'assurer que la colonne existe
             if col in cols:
                 # Remplacer les valeurs négatives par NaN
-                self.df.loc[self.df[col] < 0, col] = np.nan
+                df.loc[df[col] < 0, col] = np.nan
 
         # 4. Gérer les NaN (remplacement par la moyenne)
         for col in numeric_cols:
             # S'assurer que la colonne existe et qu'elle contient des NaN
-            if col in cols and self.df[col].isna().sum() > 0:
+            if col in cols and df[col].isna().sum() > 0:
                 # mean_col = la moyenne de la colonne
-                mean_col = self.df[col].mean()
+                mean_col = df[col].mean()
                 # Remplacer les valeurs NaN par la moyenne
-                self.df[col] = self.df[col].fillna(mean_col)
+                df[col] = df[col].fillna(mean_col)
 
         # 5. Gérer les outliers (les valeurs bizarres)
         for col in numeric_cols:
             # S'assurer que la colonne existe
             if col in cols:
                 # valeur en dessous de laquelle se trouvent 1 % des données
-                q1 = self.df[col].quantile(0.01)
+                q1 = df[col].quantile(0.01)
                 # valeur au-dessus de laquelle se trouvent 1 % des données
-                q99 = self.df[col].quantile(0.99)
+                q99 = df[col].quantile(0.99)
                 # clip : valeurs < q1 → q1, valeurs > q99 → q99
                 # on "borne" les valeurs extrêmes
                 # on remplace les valeurs extrêmes par les percentiles
-                self.df[col] = self.df[col].clip(lower=q1, upper=q99)
+                df[col] = df[col].clip(lower=q1, upper=q99)
 
         # 6. Supprimer les doublons
-        self.df = self.df.drop_duplicates()
+        df = df.drop_duplicates()
 
         # 7. Retourner la dataframe nettoyée avec index réinitialisé
-        self.df = self.df.reset_index(drop=True)
-        return self.df
+        df = df.reset_index(drop=True)
+        return df
     
     def grouping_visualization(self):
         """
@@ -107,15 +110,15 @@ class Data():
         # Crée le dossier s'il n'existe pas
         os.makedirs(fig_dir, exist_ok=True)
 
-        # ==== G1 – High_Stress → Stress & Succès (V1 + V3) ==========
+        # G1: Groupement par High_Stress → Stress & Succès
         
-        print("\n==== G1 – Group by High_Stress → Stress & Success ====\n")
+        print("\nGroup by High_Stress → Stress & Success\n")
 
         # Colonne High_Stress (True si stress > 70)
         df["High_Stress"] = df["Stress_Level"] > 70
 
         # Moyennes par High_Stress
-        g1_stats = df.groupby("High_Stress")[[
+        g1_group = df.groupby("High_Stress")[[
             "Task_Success_Rate",
             "Sleep_Hours",
             "Hours_Coding",
@@ -124,17 +127,19 @@ class Data():
 
         
         print("Mean stats by High_Stress (False = low/medium, True = high) :")
-        print(g1_stats)
+        print(g1_group)
 
-        # --- V1 : Histogramme global du stress ---
-        plt.figure(figsize=(10, 6))
-        plt.hist(
-            df["Stress_Level"],
-            bins=20,
-            edgecolor="black",
-            alpha=0.75
+        # Histogramme global du stress 
+
+        plt.figure(figsize=(10, 6)) #figure de 10x6 pouces
+        plt.hist( #construire un histogramme
+            df["Stress_Level"],#données à représenter
+            bins=20,#nb d'intervalles(barres)
+            edgecolor="black",#couleur des bordures des barres
+            alpha=0.75 #transparence des barres
         )
 
+        #ligne verticale lorsque le stress est plus que 70
         plt.axvline(
             70,
             color="red",
@@ -146,17 +151,24 @@ class Data():
         plt.title("Distribution of Stress Level with High Stress Threshold")
         plt.xlabel("Stress Level")
         plt.ylabel("Number of Developers")
+        #grid horizontale
         plt.grid(axis="y", linestyle="--", alpha=0.6)
+        # légende pour la ligne rouge 
         plt.legend()
-        plt.tight_layout()
+        #sauvegarder la figure dans le dossier fig_dir(figures) 
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G1_stress_distribution.png"), dpi=300, bbox_inches="tight")
+        # afficher la figure
         plt.show()
 
-        # --- V3 : Mean Task_Success_Rate by High_Stress ---
-        SbS = df.groupby("High_Stress")["Task_Success_Rate"].mean()
+        # Moyenne Task_Success_Rate par High_Stress
+        Stress_Succes = df.groupby("High_Stress")["Task_Success_Rate"].mean()
 
-        plt.figure(figsize=(7, 5))
-        ax = SbS.plot(
+        plt.figure(figsize=(7, 5))#figure de 7x5 pouces
+        # tracer un diagramme en barres(bar chart)
+        ax = Stress_Succes.plot( 
             kind="bar",
             edgecolor="black",
             alpha=0.8
@@ -168,62 +180,78 @@ class Data():
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
         # valeurs au-dessus des barres
-        for p in ax.patches:
-            height = p.get_height()
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax.annotate(
-                f"{height:.1f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                (                 # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                          # y = la hauteur de la barre
+                ),
+                ha="center",      # alignement horizontal du texte : centré
+                va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                fontsize=9        # taille du texte
             )
-
-        plt.tight_layout()
+        #sauvegarder la figure dans le dossier fig_dir(figures)
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G1_success_by_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
+        # G2:Groupement par Sleep_Group → Sommeil, Stress & Succès 
         
-        # ==== G2 – Sleep_Group → Sommeil, Stress & Succès (V2,V4,V5)
-        
-        print("\n==== G2 – Group by Sleep_Group → Sleep, Stress & Success ====\n")
+        print("\nGroup by Sleep_Group → Sleep, Stress & Success \n")
 
-        # Colonne Sleep_Group : <5h, 5–7h, >7h
-        df["Sleep_Group"] = pd.cut(
-            df["Sleep_Hours"],
-            bins=[0, 5, 7, 24],
-            labels=["<5h", "5–7h", ">7h"]
-        )
+        # Ajouter la Colonne Sleep_Group : <5h, 5–7h, >7h au dataframe
+        def sleep_group(hours):
+            # Regroupe les heures de sommeil en 3 catégories.
+            if hours < 5:
+                return "<5h"
+            elif hours <= 7:
+                return "5–7h"
+            else:
+                return ">7h"
+        # Appliquer la fonction sleep_group à la colonne Sleep_Hours
+        df['Sleep_Group'] = df['Sleep_Hours'].apply(sleep_group)
+    
 
-        g2_stats = df.groupby("Sleep_Group", observed=False)[[
+        g2_group = df.groupby("Sleep_Group", observed=False)[[
             "Stress_Level",
             "Task_Success_Rate",
             "Errors"
         ]].mean().round(2)
 
         print("Mean stats by Sleep_Group :")
-        print(g2_stats)
+        print(g2_group)
 
-        # --- V2 : Histogramme du taux de succès ---
+        # Histogramme Task_Success_Rate 
         plt.figure(figsize=(10, 6))
-        plt.hist(
+        plt.hist( #construire un histogramme
             df["Task_Success_Rate"],
             bins=20,
             edgecolor="black",
             alpha=0.8
         )
+
         plt.title("Distribution of Task Success Rate")
         plt.xlabel("Task Success Rate")
         plt.ylabel("Number of Developers")
         plt.grid(axis="y", linestyle="--", alpha=0.6)
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G2_success_distribution.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # --- V4 : Mean Stress_Level by Sleep_Group ---
-        ss = df.groupby("Sleep_Group", observed=False)["Stress_Level"].mean()
+        # Moyenne Stress_Level par Sleep_Group
+        Stress_Sleep = df.groupby("Sleep_Group", observed=False)["Stress_Level"].mean()
 
         plt.figure(figsize=(8, 5))
-        ax1 = ss.plot(
+        ax1 = Stress_Sleep.plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -234,25 +262,33 @@ class Data():
         plt.xticks(rotation=0)
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax1.patches:
-            height = p.get_height()
+        # Pour chaque barre dans le graphique 
+        for p in ax1.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax1.annotate(
-                f"{height:.1f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                (                 # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                          # y = juste à la hauteur de la barre
+                ),
+                ha="center",      # alignement horizontal du texte : centré
+                va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                fontsize=9        # taille du texte
             )
-
-        plt.tight_layout()
+        #sauvegarder la figure dans le dossier fig_dir(figures)
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G2_stress_by_sleep.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # --- V5 : Mean Task_Success_Rate by Sleep_Group ---
-        sbs = df.groupby("Sleep_Group", observed=False)["Task_Success_Rate"].mean()
+        #V5 :Moyenne Task_Success_Rate par Sleep_Group
+        Succes_Sleep = df.groupby("Sleep_Group", observed=False)["Task_Success_Rate"].mean()
 
         plt.figure(figsize=(8, 5))
-        ax2 = sbs.plot(
+        ax2 = Succes_Sleep.plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -263,24 +299,33 @@ class Data():
         plt.xticks(rotation=0)
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax2.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax2.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax2.annotate(
-                f"{height:.1f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
-
-        plt.tight_layout()
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
+        #sauvegarder la figure dans le dossier fig_dir(figures)
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G2_success_by_sleep.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         
-        # ==== G3 – Coding_Hours_Group → Heures de code, Stress, Succès
+        # G3 :Groupement  Coding_Hours → Heures de code, Stress, Succès
         
-        print("\n==== G3 – Group by Coding_Hours_Group → Coding, Stress & Success ====\n")
+        print("\nGroupement  Coding_Hours → Heures de code, Stress, Succès\n")
 
         def coding_group(hours):
             # Regroupe les heures de code en 3 catégories.
@@ -293,18 +338,18 @@ class Data():
 
         df["Coding_Hours_Group"] = df["Hours_Coding"].apply(coding_group)
 
-        g3_stats = df.groupby("Coding_Hours_Group")[[
+        g3_group = df.groupby("Coding_Hours_Group")[[
             "Task_Success_Rate",
             "Stress_Level",
             "Errors"
         ]].mean().round(2)
 
         print("Mean stats by Coding_Hours_Group :")
-        print(g3_stats)
+        print(g3_group)
 
         # --- Stress moyen vs heures de code ---
         plt.figure(figsize=(8, 5))
-        ax1 = g3_stats["Stress_Level"].plot(
+        ax1 = g3_group["Stress_Level"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -325,13 +370,15 @@ class Data():
                 fontsize=9
             )
 
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G3_stress_by_coding.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # --- Taux de succès moyen vs heures de code ---
+        # Task_Success_Rate vs Coding Hours  
         plt.figure(figsize=(8, 5))
-        ax2 = g3_stats["Task_Success_Rate"].plot(
+        ax2 = g3_group["Task_Success_Rate"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -342,42 +389,51 @@ class Data():
         plt.xticks(rotation=0)
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax2.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax2.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax2.annotate(
-                f"{height:.1f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G3_success_by_coding.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         
-        # ==== G4 – High_AI_Usage → IA, Erreurs & Succès (V6 + V7) ====
+        # G4:Groupement par  High_AI_Usage → IA, Erreurs & Succès 
         
-        print("\n==== G4 – Group by High_AI_Usage → AI, Errors & Success ====\n")
+        print("\n Group by High_AI_Usage → AI, Errors & Success\n")
 
         median_ai = df["AI_Usage_Hours"].median()
         df["High_AI_Usage"] = df["AI_Usage_Hours"].apply(
             lambda x: "High_AI_Usage" if x >= median_ai else "Low_AI_Usage"
         )
 
-        g4_stats = df.groupby("High_AI_Usage")[[
+        g4_group = df.groupby("High_AI_Usage")[[
             "Errors",
             "Task_Success_Rate",
             "Stress_Level"
         ]].mean().round(2)
 
         print("Mean stats by High_AI_Usage :")
-        print(g4_stats)
+        print(g4_group)
 
         # --- Erreurs moyennes vs IA ---
         plt.figure(figsize=(8, 5))
-        ax1 = g4_stats["Errors"].plot(
+        ax1 = g4_group["Errors"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -398,13 +454,13 @@ class Data():
                 fontsize=9
             )
 
-        plt.tight_layout()
+        
         plt.savefig(os.path.join(fig_dir, "G4_errors_by_ai.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         # --- Taux de succès moyen vs IA ---
         plt.figure(figsize=(8, 5))
-        ax2 = g4_stats["Task_Success_Rate"].plot(
+        ax2 = g4_group["Task_Success_Rate"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -425,29 +481,31 @@ class Data():
                 fontsize=9
             )
 
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G4_success_by_ai.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         
-        # ==== G5 – High_Coffee → Café, Stress & Succès (bonus) ======
+        # G5 : Groupement High_Coffee → Café, Stress & Succès 
         
-        print("\n==== G5 – Group by High_Coffee → Coffee, Stress & Success ====\n")
+        print("\nGroup by High_Coffee → Coffee, Stress & Success\n")
 
         med = df["Coffee_Intake"].median()
         df["High_Coffee"] = df["Coffee_Intake"].apply(
             lambda x: "High_Coffee" if x >= med else "Low_Coffee"
         )
 
-        g5_stats = df.groupby("High_Coffee")[["Stress_Level", "Task_Success_Rate"]].mean().round(2)
+        g5_group = df.groupby("High_Coffee")[["Stress_Level", "Task_Success_Rate"]].mean().round(2)
 
         print(f"Median Coffee_Intake = {med:.2f}")
         print("\nMean stats by High_Coffee :")
-        print(g5_stats)
+        print(g5_group)
 
         # Stress moyen par groupe de café
         plt.figure(figsize=(8, 5))
-        ax1 = g5_stats["Stress_Level"].plot(
+        ax1 = g5_group["Stress_Level"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -458,23 +516,32 @@ class Data():
         plt.xticks(rotation=0)
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax1.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax1.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax1.annotate(
-                f"{height:.2f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G5_stress_by_coffee.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         # Succès moyen par groupe de café
         plt.figure(figsize=(8, 5))
-        ax2 = g5_stats["Task_Success_Rate"].plot(
+        ax2 = g5_group["Task_Success_Rate"].plot(
             kind="bar",
             edgecolor="black",
             alpha=0.85
@@ -485,40 +552,42 @@ class Data():
         plt.xticks(rotation=0)
         plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax2.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax2.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax2.annotate(
-                f"{height:.2f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
+
         plt.savefig(os.path.join(fig_dir, "G5_success_by_coffee.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
-        # ============================================================
-        # ==== G6 – Sleep_Group × High_Stress → Profils combinés =====
-        # ============================================================
-        print("\n==== G6 – Sleep_Group × High_Stress → Sleep + Stress Profiles ====\n")
+        # G6 : Groupement Sleep_Group × High_Stress → Profils combinés 
+        print("\nSleep_Group × High_Stress → Sleep + Stress Profiles\n")
 
         stress_threshold = df["Stress_Level"].mean()
         df["High_Stress"] = df["Stress_Level"] > stress_threshold
+        #  Créer un tableau récapitulatif des moyennes
+        sleep_stress_summary = df.groupby(["Sleep_Group", "High_Stress"]).agg({"Task_Success_Rate": "mean","Errors": "mean"}).round(2)
 
-        sleep_stress_summary = (
-            df.groupby(["Sleep_Group", "High_Stress"])
-            .agg({
-                "Task_Success_Rate": "mean",
-                "Errors": "mean"
-            })
-            .round(2)
-        )
-
-        print("Mean Task_Success_Rate & Errors by Sleep_Group × High_Stress :")
+        print("Moyenne Task_Success_Rate & Errors by Sleep_Group × High_Stress :")
         print(sleep_stress_summary)
-
+        # Tableau croisé dynamique pour Task_Success_Rate
         pivot_success = df.pivot_table(
             values="Task_Success_Rate",
             index="High_Stress",
@@ -543,24 +612,33 @@ class Data():
         ax.legend(title="Sleep Group")
         ax.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax.annotate(
-                f"{height:.2f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        #dpi  résolution de l'image
+        #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+        #tight ajuste automatiquement les marges pour que tout le contenu soit visible
         plt.savefig(os.path.join(fig_dir, "G6_success_sleep_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
        
-        # ==== G7 – High_AI_Usage × High_Stress → IA + Stress =========
+        # G7 : Groupement  High_AI_Usage × High_Stress → IA + Stress 
         
-        print("\n==== G7 – High_AI_Usage × High_Stress → AI + Stress ====\n")
+        print("\nHigh_AI_Usage × High_Stress → AI + Stress \n")
 
         ai_threshold = df["AI_Usage_Hours"].mean()
         df["High_AI_Usage_Bool"] = df["AI_Usage_Hours"] > ai_threshold  # booléen
@@ -601,22 +679,29 @@ class Data():
         ax2.legend(title="High AI Usage (False/True)")
         ax2.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax2.patches:
-            height = p.get_height()
+        # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax2.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax2.annotate(
-                f"{height:.2f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        
         plt.savefig(os.path.join(fig_dir, "G7_errors_ai_stress.png"), dpi=300, bbox_inches="tight")
         plt.show()
 
         
-        # ==== G8 – Coding_Hours_Group × High_Success → Profil final ==
+        # G8 : Groupement Coding_Hours_Group × High_Success → Profil final 
        
         print("\n==== G8 – Coding_Hours_Group × High_Success → Coding + Success Profiles ====\n")
 
@@ -650,20 +735,26 @@ class Data():
         ax.legend(title="High Success")
         ax.grid(axis="y", linestyle="--", alpha=0.6)
 
-        for p in ax.patches:
-            height = p.get_height()
+       # valeurs au-dessus des barres
+        # Pour chaque barre dans le graphique (chaque rectangle de l'histogramme)
+        for p in ax.patches: #ax.patches contient toutes les barres du graphique
+            # Récupérer la hauteur de la barre 
+            max = p.get_height()
+            # Ajouter le nombre au-dessus de la barre
             ax.annotate(
-                f"{height:.2f}",
-                (p.get_x() + p.get_width() / 2, height),
-                ha="center",
-                va="bottom",
-                fontsize=9
-            )
+                f"{max:.1f}",  # texte affiché : la hauteur avec 1 chiffre après la virgule
+                    (   # position du texte :
+                    p.get_x() + p.get_width() / 2,  # x = centre de la barre
+                    max                             # y = la hauteur de la barre
+                        ),
+                        ha="center",      # alignement horizontal du texte : centré
+                        va="bottom",      # alignement vertical : le texte commence au dessus de la barre
+                        fontsize=9        # taille du texte
+                    )
 
-        plt.tight_layout()
+        
         plt.savefig(os.path.join(fig_dir, "G8_cognitive_load_coding_success.png"), dpi=300, bbox_inches="tight")
         plt.show()
-
 
     def filtering(self):
 
@@ -813,8 +904,10 @@ class Data():
 
     def matrix_correlation(self,afficher:bool):
         df=self.df
-        df=pd.read_csv("AI_Developer_Performance_Extended_1000.csv")
-
+        # Dossier de sortie pour enregistrer toutes les figures
+        fig_dir = "figures"
+        # Crée le dossier s'il n'existe pas
+        os.makedirs(fig_dir, exist_ok=True)
 
         #Garde uniquement les colonnes numériques (int, float).
         numeric_cols = df.select_dtypes(include='number')
@@ -885,7 +978,11 @@ class Data():
             ax.tick_params(which="minor", bottom=False, left=False)
 
             # 10. Ajuster la mise en page pour éviter que les labels se coupent
-            plt.tight_layout()
+            #sauvegarder la figure dans le dossier fig_dir(figures) 
+            #dpi  résolution de l'image
+            #bbox_inches permet de minimiser l'espace blanc inutile autour de la figure sauvegardée
+            #tight ajuste automatiquement les marges pour que tout le contenu soit visible
+            plt.savefig(os.path.join(fig_dir, "Matrice_Correlation.png"), dpi=300, bbox_inches="tight")
             plt.show()
 
         return corr_rounded
@@ -897,7 +994,6 @@ class Data():
 
 data=Data('AI_Developer_Performance_Extended_1000.csv')
 print(data)
-
 data.inspect_data()
 data.summarize_data()
 df=data.clean_data()
