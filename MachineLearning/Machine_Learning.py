@@ -26,7 +26,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 # -------- Partie 1: Train les models et chercher le plus performant --------
 
 # -------- 1) Charger le CSV  --------
-# Place "data.csv" dans le même dossier que ajanaa.py
+# Place "data.csv" dans le même dossier que Machine_Learning.py
 CSV_PATH = Path(__file__).resolve().parent / "data.csv"
 df = pd.read_csv(CSV_PATH)
 

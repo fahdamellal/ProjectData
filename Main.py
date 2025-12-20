@@ -57,7 +57,14 @@ class Data():
                 # Si la valeur n'est pas numérique on la remplace par NaN
                 self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
 
-        # 3. Gérer les NaN (remplacement par la moyenne)
+        # 3. Gerer les valeurs négatives (remplacement par NaN)
+        for col in numeric_cols:
+            # S'assurer que la colonne existe
+            if col in cols:
+                # Remplacer les valeurs négatives par NaN
+                self.df.loc[self.df[col] < 0, col] = np.nan
+
+        # 4. Gérer les NaN (remplacement par la moyenne)
         for col in numeric_cols:
             # S'assurer que la colonne existe et qu'elle contient des NaN
             if col in cols and self.df[col].isna().sum() > 0:
@@ -66,7 +73,7 @@ class Data():
                 # Remplacer les valeurs NaN par la moyenne
                 self.df[col] = self.df[col].fillna(mean_col)
 
-        # 4. Gérer les outliers (les valeurs bizarres)
+        # 5. Gérer les outliers (les valeurs bizarres)
         for col in numeric_cols:
             # S'assurer que la colonne existe
             if col in cols:
@@ -79,10 +86,10 @@ class Data():
                 # on remplace les valeurs extrêmes par les percentiles
                 self.df[col] = self.df[col].clip(lower=q1, upper=q99)
 
-        # 5. Supprimer les doublons
+        # 6. Supprimer les doublons
         self.df = self.df.drop_duplicates()
 
-        # 6. Retourner la dataframe nettoyée avec index réinitialisé
+        # 7. Retourner la dataframe nettoyée avec index réinitialisé
         self.df = self.df.reset_index(drop=True)
         return self.df
     
@@ -127,6 +134,7 @@ class Data():
             edgecolor="black",
             alpha=0.75
         )
+
         plt.axvline(
             70,
             color="red",
@@ -134,6 +142,7 @@ class Data():
             linewidth=2,
             label="High Stress Threshold = 70"
         )
+
         plt.title("Distribution of Stress Level with High Stress Threshold")
         plt.xlabel("Stress Level")
         plt.ylabel("Number of Developers")
@@ -885,14 +894,15 @@ class Data():
         # Réécrit le CSV d'origine avec la version nettoyée.
         self.df.to_csv(self.path, index=False)
 
-    
 
 data=Data('AI_Developer_Performance_Extended_1000.csv')
 print(data)
 
 data.inspect_data()
 data.summarize_data()
-data.clean_data()
+df=data.clean_data()
+print(df)
+data.summarize_data()
 data.grouping_visualization()
-# filters=data.filtering()
-# corr_matrix=data.matrix_correlation(True)
+filters=data.filtering()
+corr_matrix=data.matrix_correlation(True)
