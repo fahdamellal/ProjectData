@@ -772,7 +772,7 @@ class Data():
         Retourne un dictionnaire contenant tous les DataFrames filtrés.
         """
 
-        df = self.df  # alias plus court
+        df = self.df  
         filters = {}
 
         
@@ -991,8 +991,8 @@ class Data():
         # Réécrit le CSV d'origine avec la version nettoyée.
         self.df.to_csv(self.path, index=False)
 
-
-data=Data('AI_Developer_Performance_Extended_1000.csv')
+path=input("Entrer le path du fichier CSV : ")
+data=Data(path)
 print(data)
 data.inspect_data()
 data.summarize_data()

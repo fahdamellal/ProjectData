@@ -3,8 +3,6 @@
 # KNN, SVR, Decision Tree, Random Forest
 # X = toutes les colonnes sauf Task_Success_Rate
 # y = Task_Success_Rate
-
-
 import numpy as np
 import pandas as pd
 from pathlib import Path
