@@ -583,7 +583,8 @@ class Data():
         stress_threshold = df["Stress_Level"].mean()
         df["High_Stress"] = df["Stress_Level"] > stress_threshold
         #  Créer un tableau récapitulatif des moyennes
-        sleep_stress_summary = df.groupby(["Sleep_Group", "High_Stress"]).agg({"Task_Success_Rate": "mean","Errors": "mean"}).round(2)
+        sleep_stress_summary = (df.groupby(["Sleep_Group", "High_Stress"])[["Task_Success_Rate", "Errors"]].mean().round(2))
+
 
         print("Moyenne Task_Success_Rate & Errors by Sleep_Group × High_Stress :")
         print(sleep_stress_summary)
@@ -643,14 +644,7 @@ class Data():
         ai_threshold = df["AI_Usage_Hours"].mean()
         df["High_AI_Usage_Bool"] = df["AI_Usage_Hours"] > ai_threshold  # booléen
 
-        ai_stress_summary = (
-            df.groupby(["High_AI_Usage_Bool", "High_Stress"])
-            .agg({
-                "Errors": "mean",
-                "Task_Success_Rate": "mean"
-            })
-            .round(2)
-        )
+        ai_stress_summary = (df.groupby(["High_AI_Usage_Bool", "High_Stress"])[[ "Errors","Task_Success_Rate"]].mean().round(2))
 
         print("Mean Errors & Success by High_AI_Usage × High_Stress :")
         print(ai_stress_summary)
